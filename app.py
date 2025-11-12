@@ -11,9 +11,6 @@ from datetime import datetime, timedelta
 import numpy as np
 from textblob import TextBlob
 import re
-import os
-import glob
-from linkedin_scraper_selenium import main as main_scrapping
 
 # Configuration de la page
 st.set_page_config(
@@ -204,7 +201,6 @@ st.markdown("### Analyse des 30 derniers posts LinkedIn")
 
 # Sidebar pour les options
 with st.sidebar:
-    # st.image("https://via.placeholder.com/150x50/4f46e5/ffffff?text=YAS", use_container_width=True)
     st.image("yas-senegal.jpeg", use_container_width=True)
     st.markdown("---")
     
@@ -212,40 +208,13 @@ with st.sidebar:
     
     data_source = st.radio(
         "Source de données:",
-        ["Données de démonstration", "Données scrapées"]
+        ["Données de démonstration", "Importer un fichier CSV"]
     )
     
     uploaded_file = None
-    if data_source == "Données scrapées":
-        # click on button start the scraper
-        if st.button("Scraper LinkedIn"):
-            st.write("Scrapping encours")
-            resp = main_scrapping()
-            st.write("Scrapping termine")
-            # scraper = LinkedInScraper()
-            # posts_data = scraper.scrape()
-            # filename = scraper.save_to_csv(posts_data)
-            # uploaded_file = filename
-            # old code
-            # uploaded_file = st.file_uploader("Choisir un fichier CSV", type=['csv'])
-            # old code 
-            # Get all matching files
-            csv_files = glob.glob("linkedin_yas_posts_*.csv")
-            if not csv_files:
-                st.error("Aucun fichier trouvé.")
-            else:
-                # Extract the timestamp from each filename and sort
-                def extract_timestamp(filename):
-                    # Example: linkedin_yas_posts_20251111_160420.csv
-                    base = os.path.basename(filename)
-                    ts_str = base.replace("linkedin_yas_posts_", "").replace(".csv", "")
-                    return datetime.strptime(ts_str, "%Y%m%d_%H%M%S")
-
-                uploaded_file = max(csv_files, key=extract_timestamp)
-
-                # st.write(f"📄 Fichier le plus récent : `{uploaded_file}`")
-
-            # st.info("Format attendu: date, topic, comment")
+    if data_source == "Importer un fichier CSV":
+        uploaded_file = st.file_uploader("Choisir un fichier CSV", type=['csv'])
+        st.info("Format attendu: date, topic, comment")
     
     st.markdown("---")
     st.subheader("📅 Période")
@@ -255,7 +224,7 @@ with st.sidebar:
     st.markdown("### 📖 Guide d'utilisation")
     with st.expander("Comment utiliser cette app?"):
         st.markdown("""
-        1. **Données**: Utilisez les données de démo ou donnees scrapées
+        1. **Données**: Utilisez les données de démo ou importez votre CSV
         2. **Analyse**: Consultez les statistiques et graphiques
         3. **Recommandations**: Suivez les actions prioritaires
         4. **Export**: Téléchargez le rapport complet
@@ -264,7 +233,7 @@ with st.sidebar:
 # Chargement des données
 if data_source == "Données de démonstration":
     df = generate_mock_data(date_range)
-    st.info("ℹ️ Vous utilisez des données simulées. Pour analyser vos vraies données LinkedIn, utilisez la source 'Données scrapées'.")
+    st.info("ℹ️ Vous utilisez des données simulées. Pour analyser vos vraies données LinkedIn, importez un fichier CSV.")
 else:
     if uploaded_file is not None:
         try:
@@ -280,7 +249,7 @@ else:
             st.error(f"❌ Erreur lors du chargement du fichier: {e}")
             st.stop()
     else:
-        st.warning("⚠️ Veuillez scrapper des donnees")
+        st.warning("⚠️ Veuillez importer un fichier CSV")
         st.stop()
 
 # Calcul des statistiques
