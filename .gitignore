@@ -50,7 +50,6 @@ data/*.zip
 screenshots/
 *.png
 *.jpg
-*.jpeg
 *.gif
 debug/*.png
 logs/*.png
