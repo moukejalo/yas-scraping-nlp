@@ -180,7 +180,7 @@ class LinkedInScraper:
             #     EC.presence_of_element_located((By.CSS_SELECTOR, ".entity-result__title-text a"))
             # )
             # company_url = first_result.get_attribute("href")
-            company_url = "https://www.linkedin.com/company/yas-senegal"
+            company_url = f"https://www.linkedin.com/company/{company_name}"
             
             
             # Aller sur la page de l'entreprise
@@ -395,13 +395,22 @@ class LinkedInScraper:
             posts_data: Liste des posts
             filename: Nom du fichier (optionnel)
         """
+
+        # Define the save directory
+        save_dir = "data"
+        os.makedirs(save_dir, exist_ok=True)  # ensures folder exists, even if deleted later
+
+
         if not filename:
             filename = f"linkedin_yas_posts_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+
+        # Full path inside 'data' folder
+        filepath = os.path.join(save_dir, filename)
         
         df = pd.DataFrame(posts_data)
-        df.to_csv(filename, index=False, encoding='utf-8-sig')
-        print(f"💾 Données sauvegardées dans: {filename}")
-        return filename
+        df.to_csv(filepath, index=False, encoding='utf-8-sig')
+        print(f"💾 Données sauvegardées dans: {filepath}")
+        return filepath
     
     def close(self):
         """Ferme le navigateur"""

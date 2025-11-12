@@ -364,7 +364,9 @@ st.markdown("---")
 st.subheader("💡 Recommandations Prioritaires")
 
 # Identifier les sujets problématiques
-problematic_topics = topic_analysis[topic_analysis['score'] < 0].sort_values('score')
+problematic_topics = topic_analysis[topic_analysis['score'] < 0.5].sort_values('score')
+st.write(problematic_topics)
+st.write("problematic_topics")
 
 if len(problematic_topics) > 0:
     for topic in problematic_topics.index[:3]:  # Top 3 problèmes
@@ -372,7 +374,7 @@ if len(problematic_topics) > 0:
         priority = "🔴 HAUTE" if score < -30 else "🟡 MOYENNE"
         
         st.markdown(f"### {priority} - {topic}")
-        st.markdown(f"**Score de sentiment:** {score:.1f}%")
+        # st.markdown(f"**Score de sentiment:** {score:.1f}%")
         
         recs = get_recommendations(topic, score)
         
