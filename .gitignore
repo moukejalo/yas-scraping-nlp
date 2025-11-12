@@ -1,0 +1,412 @@
+# ============================================================================
+# .gitignore - LinkedIn Scraper Yas
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# DONNÉES SENSIBLES (IMPORTANT - NE JAMAIS COMMIT)
+# ----------------------------------------------------------------------------
+
+# Fichier de configuration avec identifiants
+.env
+.env.local
+.env.production
+
+# Fichiers de credentials
+credentials.json
+secrets.json
+config_private.py
+
+# ----------------------------------------------------------------------------
+# DONNÉES EXTRAITES
+# ----------------------------------------------------------------------------
+
+# Fichiers CSV générés
+*.csv
+data/*.csv
+exports/*.csv
+
+# Fichiers JSON
+data/*.json
+exports/*.json
+
+# Fichiers Excel
+*.xlsx
+*.xls
+data/*.xlsx
+
+# Fichiers texte avec données
+data/*.txt
+exports/*.txt
+
+# Archives
+*.zip
+*.tar.gz
+data/*.zip
+
+# ----------------------------------------------------------------------------
+# CAPTURES D'ÉCRAN ET MÉDIAS
+# ----------------------------------------------------------------------------
+
+screenshots/
+*.png
+*.jpg
+*.jpeg
+*.gif
+debug/*.png
+logs/*.png
+
+# ----------------------------------------------------------------------------
+# LOGS ET DEBUG
+# ----------------------------------------------------------------------------
+
+# Fichiers de log
+*.log
+logs/
+debug/
+*.debug
+
+# Fichiers de trace
+trace/
+*.trace
+
+# Fichiers temporaires de debug
+*.tmp
+*.temp
+debug_*.html
+page_source_*.html
+
+# ----------------------------------------------------------------------------
+# PYTHON
+# ----------------------------------------------------------------------------
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# pdm
+.pdm.toml
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# ----------------------------------------------------------------------------
+# IDE ET ÉDITEURS
+# ----------------------------------------------------------------------------
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+.idea_modules/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# Atom
+.atom/
+
+# ----------------------------------------------------------------------------
+# SYSTÈME D'EXPLOITATION
+# ----------------------------------------------------------------------------
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.directory
+.Trash-*
+.nfs*
+
+# ----------------------------------------------------------------------------
+# SELENIUM ET WEBDRIVER
+# ----------------------------------------------------------------------------
+
+# ChromeDriver
+chromedriver
+chromedriver.exe
+geckodriver
+geckodriver.exe
+
+# Profils navigateur
+profile/
+browser_profile/
+selenium_profile/
+
+# Cache navigateur
+.cache/
+cache/
+
+# ----------------------------------------------------------------------------
+# STREAMLIT
+# ----------------------------------------------------------------------------
+
+# Streamlit cache
+.streamlit/
+streamlit_cache/
+
+# ----------------------------------------------------------------------------
+# BASES DE DONNÉES
+# ----------------------------------------------------------------------------
+
+*.db
+*.sqlite
+*.sqlite3
+database/
+
+# ----------------------------------------------------------------------------
+# FICHIERS DE SAUVEGARDE
+# ----------------------------------------------------------------------------
+
+*.bak
+*.backup
+*_backup
+backup/
+backups/
+
+# ----------------------------------------------------------------------------
+# FICHIERS COMPILÉS
+# ----------------------------------------------------------------------------
+
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# ----------------------------------------------------------------------------
+# PACKAGES
+# ----------------------------------------------------------------------------
+
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# ----------------------------------------------------------------------------
+# FICHIERS TEMPORAIRES DIVERS
+# ----------------------------------------------------------------------------
+
+tmp/
+temp/
+*.tmp
+*.temp
+.cache
+
+# ----------------------------------------------------------------------------
+# NOTES ET DOCUMENTATION PRIVÉE
+# ----------------------------------------------------------------------------
+
+notes_privees.md
+TODO_prive.md
+secrets.txt
+
+# ----------------------------------------------------------------------------
+# CONFIGURATION SPÉCIFIQUE ENVIRONNEMENT
+# ----------------------------------------------------------------------------
+
+config_local.py
+settings_local.py
+local_config.json
+
+# ----------------------------------------------------------------------------
+# FICHIERS DE VERROUILLAGE
+# ----------------------------------------------------------------------------
+
+*.lock
+.lock
+
+# ----------------------------------------------------------------------------
+# RAPPORTS ET EXPORTS
+# ----------------------------------------------------------------------------
+
+reports/
+exports/
+output/
+results/
+
+# Mais garder les dossiers (avec .gitkeep)
+!reports/.gitkeep
+!exports/.gitkeep
+!data/.gitkeep
+
+# ============================================================================
+# FIN DU FICHIER .gitignore
+# ============================================================================
