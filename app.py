@@ -198,6 +198,45 @@ def get_recommendations(topic, sentiment_score):
         'kpi': 'Satisfaction client'
     })
 
+def extract_timestamp_post(filename):
+    # Example: linkedin_yas_posts_20251111_160420.csv
+    base = os.path.basename(filename)
+    ts_str = base.replace("data/linkedin_yas_posts_", "").replace(".csv", "")
+    return datetime.strptime(ts_str, "%Y%m%d_%H%M%S")
+
+def extract_timestamp_comment(filename):
+    # Example: linkedin_yas_posts_20251111_160420.csv
+    base = os.path.basename(filename)
+    ts_str = base.replace("data/linkedin_yas_comments_", "").replace(".csv", "")
+    return datetime.strptime(ts_str, "%Y%m%d_%H%M%S")
+
+def get_latest_file(folder_path, file_type):
+    """
+    file_type: "comments" or "posts"
+    folder_path: directory where CSV files are stored
+    """
+
+    prefix = f"linkedin_yas_{file_type}_"
+
+    # Get all matching files
+    files = [
+        f for f in os.listdir(folder_path)
+        if f.startswith(prefix) and f.endswith(".csv")
+    ]
+
+    if not files:
+        return None  # no file found
+
+    # Extract timestamps and find the newest file
+    def extract_datetime(filename):
+        # Example: linkedin_yas_posts_20251114_145830.csv
+        timestamp = filename.replace(prefix, "").replace(".csv", "")
+        return datetime.strptime(timestamp, "%Y%m%d_%H%M%S")
+
+    latest_file = max(files, key=lambda f: extract_datetime(f))
+
+    return os.path.join(folder_path, latest_file)
+
 # Titre principal
 st.markdown('<p class="main-header">📊 Analyse de Sentiments - Opérateur Yas</p>', unsafe_allow_html=True)
 st.markdown("### Analyse des 30 derniers posts LinkedIn")
@@ -224,71 +263,53 @@ with st.sidebar:
     uploaded_file = None
     uploaded_file = None
     if data_source == "Données scrapées":
+        # get latest file
+        folder = "data"
+        latest_post_file = get_latest_file(folder, "posts")
+        latest_comment_file = get_latest_file(folder, "comments")
+        if latest_post_file and latest_comment_file:
+            df_post = pd.read_csv(latest_post_file)
+            df_comments = pd.read_csv(latest_comment_file)
+        else:
+            st.error("Aucun fichier trouvé.")
+
+        # csv_files = glob.glob("linkedin_yas_posts_*.csv")
+        # if not csv_files:
+        #     st.error("Aucun fichier trouvé.")
+        # else:
+        #     # Extract the timestamp from each filename and sort
+        #     uploaded_file = max(csv_files, key=extract_timestamp_post)
+        #     df_post = pd.read_csv(uploaded_file)
+
+        # # get latest file
+        # csv_files = glob.glob("linkedin_yas_comments_*.csv")
+        # if not csv_files:
+        #     st.error("Aucun fichier trouvé.")
+        # else:
+        #     # Extract the timestamp from each filename and sort
+        #     uploaded_file2 = max(csv_files, key=extract_timestamp_post)
+        #     df_comments = pd.read_csv(uploaded_file2)
+
         # click on button start the scraper
         if st.button("Scraper LinkedIn"):
             st.write("Scrapping encours")
             df_post, df_comments = main_scrapping()
             st.write("Scrapping termine")
-            # csv_files = glob.glob("linkedin_yas_posts_*.csv")
-            # csv_files = glob.glob("linkedin_yas_posts_20251114_121554.csv")
-            # if not csv_files:
-            #     st.error("Aucun fichier trouvé.")
-            # else:
-            #     # Extracting the timestamp from each filename and sort
-            #     def extract_timestamp(filename):
-            #         # Example: linkedin_yas_posts_20251111_160420.csv
-            #         base = os.path.basename(filename)
-            #         ts_str = base.replace("linkedin_yas_posts_", "").replace(".csv", "")
-            #         return datetime.strptime(ts_str, "%Y%m%d_%H%M%S")
-                
-            #     uploaded_file = max(csv_files, key=extract_timestamp)
     
-    # st.markdown("---")
-    # st.subheader("📅 Période")
-    # date_range = st.slider("Nombre de jours", 7, 90, 30)
-    
-    # st.markdown("---")
-    # st.markdown("### 📖 Guide d'utilisation")
-    # with st.expander("Comment utiliser cette app?"):
-    #     st.markdown("""
-    #     1. **Données**: Utilisez les données de démo ou importez votre CSV
-    #     2. **Analyse**: Consultez les statistiques et graphiques
-    #     3. **Recommandations**: Suivez les actions prioritaires
-    #     4. **Export**: Téléchargez le rapport complet
-    #     """)
 
-# Chargement des données
-if data_source == "Données de démonstration":
-    st.markdown("---")
-    # df = generate_mock_data(date_range)
-    # st.write(df.head())
-    # st.info("ℹ️ Vous utilisez des données simulées. Pour analyser vos vraies données LinkedIn, importez un fichier CSV.")
-else:
-    if df_post is not None:
-    # if True:
-        try:
-            # df = pd.read_csv(uploaded_file)
-            df = df_post
-            st.write(df.head())
 
-            # df_comments = pd.read_csv("linkedin_yas_posts_20251114_121556.csv")
-            # df_comments = pd.read_csv("linkedin_yas_posts_20251114_121556.csv")
-            st.write(df_comments.head())
-
-            # df = df_post
-            # Analyse de sentiment si pas déjà présent
-            # if 'sentiment' not in df.columns:
-            #     with st.spinner("Analyse des sentiments en cours..."):
-            #         results = df['comment'].apply(lambda x: pd.Series(analyze_sentiment(x)))
-            #         df['sentiment'] = results[0]
-            #         df['score'] = results[1]
-            # st.success(f"✅ {len(df)} posts importés et analysés")
-        except Exception as e:
-            st.error(f"❌ Erreur lors du chargement du fichier: {e}")
-            st.stop()
-    else:
-        st.warning("⚠️ Cliquez sur le bouton 'Scraper LinkedIn' pour lancer le scrapping. Ensuite veuillez patienter")
+if df_post is not None:
+# if True:
+    try:
+        df = df_post
+        st.write(df.head())
+        st.write(df_comments.head())
+    except Exception as e:
+        st.error(f"❌ Erreur lors du chargement du fichier: {e}")
         st.stop()
+else:
+    st.warning("⚠️ Cliquez sur le bouton 'Scraper LinkedIn' pour lancer le scrapping. Ensuite veuillez patienter")
+    st.stop()
 
 # Calcul des statistiques
 total_posts = len(df)
@@ -406,30 +427,6 @@ with col2:
 
     st.plotly_chart(fig_bar, use_container_width=True)
 
-# with col2:
-    # st.subheader("📈 Évolution dans le Temps")
-    
-    # df_time = df.groupby(['date', 'sentiment']).size().reset_index(name='count')
-    
-    # fig_line = px.line(
-    #     df_time, 
-    #     x='date', 
-    #     y='count', 
-    #     color='sentiment',
-    #     color_discrete_map={'positif': '#10b981', 'négatif': '#ef4444', 'neutre': '#94a3b8'},
-    #     markers=True
-    # )
-    
-    # fig_line.update_layout(
-    #     height=400,
-    #     xaxis_title="Date",
-    #     yaxis_title="Nombre de posts",
-    #     margin=dict(t=20, b=20, l=20, r=20),
-    #     legend=dict(title="Sentiment")
-    # )
-    
-    # st.plotly_chart(fig_line, use_container_width=True)
-
 # Analyse par sujet
 st.subheader("🎯 Analyse par Sujet")
 
@@ -490,85 +487,6 @@ else:
 st.subheader("📋 Détail des Posts")
 
 st.write(df)
-
-
-
-
-# filter_sentiment = st.multiselect(
-#     "Filtrer par sentiment:",
-#     options=['positif', 'négatif', 'neutre'],
-#     default=['positif', 'négatif', 'neutre']
-# )
-
-# filter_topic = st.multiselect(
-#     "Filtrer par sujet:",
-#     options=df['topic'].unique().tolist(),
-#     default=df['topic'].unique().tolist()
-# )
-
-# df_filtered = df[
-#     (df['sentiment'].isin(filter_sentiment)) & 
-#     (df['topic'].isin(filter_topic))
-# ].sort_values('date', ascending=False)
-
-# # Affichage avec couleurs
-# def color_sentiment(val):
-#     colors = {'positif': 'background-color: #218050', 
-#               'négatif': 'background-color: #9c2222', 
-#               'neutre': 'background-color: #8c9dad'}
-#     return colors.get(val, '')
-
-# st.dataframe(
-#     df_filtered[['date', 'topic', 'sentiment', 'comment', 'engagement']]
-#     .style.applymap(color_sentiment, subset=['sentiment']),
-#     use_container_width=True,
-#     height=400
-# )
-
-# # Export des résultats
-# st.markdown("---")
-# st.subheader("📥 Export des Résultats")
-
-# col1, col2 = st.columns(2)
-
-# with col1:
-#     csv = df_filtered.to_csv(index=False).encode('utf-8')
-#     st.download_button(
-#         label="📊 Télécharger les données (CSV)",
-#         data=csv,
-#         file_name=f"yas_sentiment_analysis_{datetime.now().strftime('%Y%m%d')}.csv",
-#         mime="text/csv"
-#     )
-
-# with col2:
-#     # Créer un rapport texte
-#     report = f"""
-# RAPPORT D'ANALYSE DE SENTIMENTS - YAS
-# Date: {datetime.now().strftime('%d/%m/%Y')}
-# Période analysée: {date_range} jours
-
-# STATISTIQUES GLOBALES:
-# - Total de posts analysés: {total_posts}
-# - Sentiments positifs: {positif_pct:.1f}% ({positif_count} posts)
-# - Sentiments négatifs: {negatif_pct:.1f}% ({negatif_count} posts)
-# - Sentiments neutres: {neutre_pct:.1f}% ({neutre_count} posts)
-
-# SUJETS PROBLÉMATIQUES:
-# """
-    
-#     for i, topic in enumerate(problematic_topics.index[:3], 1):
-#         score = problematic_topics.loc[topic, 'score']
-#         report += f"\n{i}. {topic} (Score: {score:.1f}%)\n"
-#         recs = get_recommendations(topic, score)
-#         for action in recs['actions']:
-#             report += f"   - {action}\n"
-    
-#     st.download_button(
-#         label="📄 Télécharger le rapport (TXT)",
-#         data=report,
-#         file_name=f"rapport_yas_{datetime.now().strftime('%Y%m%d')}.txt",
-#         mime="text/plain"
-#     )
 
 # Footer
 st.markdown("---")

@@ -827,8 +827,8 @@ class LinkedInScraper:
         os.makedirs(save_dir, exist_ok=True)  # ensures folder exists, even if deleted later
 
 
-        if not filename:
-            filename = f"linkedin_yas_posts_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+        # if not filename:
+        filename = f"{filename}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
 
         # Full path inside 'data' folder
         filepath = os.path.join(save_dir, filename)
@@ -873,41 +873,13 @@ def main():
     """
     # Fonction principale
     # """
-    # print("=" * 70)
-    # print("🚀 LINKEDIN SCRAPER - OPÉRATEUR YAS")
-    # print("=" * 70)
-    # print()
-    # print("⚠️  AVERTISSEMENT:")
-    # print("Le scraping de LinkedIn peut violer leurs conditions d'utilisation.")
-    # print("Utilisez ce script à vos propres risques.")
-    # print("Il est recommandé d'utiliser l'API officielle LinkedIn.")
-    # print()
-    # print("=" * 70)
-    # print()
-    
-    # Demander confirmation
-    # confirmation = input("Voulez-vous continuer? (oui/non): ").lower()
-    # if confirmation not in ['oui', 'yes', 'o', 'y']:
-    #     print("❌ Opération annulée")
-    #     return
-    
-    # print()
-    # print("📝 Configuration du scraper...")
-    # print()
-    
-    # Demander les identifiants
-    # email = input("Email LinkedIn: ").strip()
     # Usage
     email = get_secret("LINKEDIN_EMAIL")
     password = get_secret("LINKEDIN_PASSWORD")
-    # password = input("Mot de passe LinkedIn: ").strip()
-    # company_name = input("Nom de l'entreprise (ex: Yas Guinée): ").strip() or "Yas"
     company_name = get_secret("COMPANY_NAME")
+    max_posts = int(get_secret("MAX_POSTS", 30))
     
-    # Options
-    # max_posts = int(input("Nombre de posts à extraire (défaut: 30): ").strip() or "30")
-    # headless = input("Mode sans interface graphique? (oui/non, défaut: non): ").lower() in ['oui', 'yes', 'o', 'y']
-    max_posts = 5
+    # max_posts = 5
     headless = False
     
     print(email)
@@ -915,12 +887,8 @@ def main():
     print()
     
     scraper = None
-    # return "ok"
     
     try:
-
-        
-
         # Initialiser le scraper
         scraper = LinkedInScraper(email, password, headless=headless)
         
@@ -942,9 +910,9 @@ def main():
         
         if posts_data:
             # Sauvegarder les données
-            filename = scraper.save_to_csv(posts_data)
+            filename = scraper.save_to_csv(posts_data, "linkedin_yas_posts")
             time.sleep(2 )
-            filename2 = scraper.save_to_csv(comments_data)
+            filename2 = scraper.save_to_csv(comments_data, "linkedin_yas_comments")
             
             # Afficher un résumé
             print()
@@ -956,16 +924,16 @@ def main():
             df_comments_data = pd.DataFrame(comments_data)
             
             print(f"✅ Total de posts extraits: {len(posts_data)}")
-            print(f"📅 Période: {df['date'].min()} à {df['date'].max()}")
+            print(f"📅 Période: {df_posts_data['date'].min()} à {df_posts_data['date'].max()}")
             print()
             print("📈 Distribution des sentiments:")
-            sentiment_counts = df['sentiment'].value_counts()
+            sentiment_counts = df_posts_data['sentiment'].value_counts()
             for sentiment, count in sentiment_counts.items():
-                pct = (count / len(df)) * 100
+                pct = (count / len(df_posts_data)) * 100
                 print(f"   {sentiment.capitalize()}: {count} ({pct:.1f}%)")
             print()
             print("🎯 Sujets les plus mentionnés:")
-            topic_counts = df['topic'].value_counts().head(5)
+            topic_counts = df_posts_data['topic'].value_counts().head(5)
             for topic, count in topic_counts.items():
                 print(f"   {topic}: {count} mentions")
             print()
