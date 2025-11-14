@@ -7,6 +7,7 @@ streamlit
 plotly
 openpyxl
 python-dotenv
+beautifulsoup4
 
 # # Requirements pour le scraper LinkedIn avec Selenium
 

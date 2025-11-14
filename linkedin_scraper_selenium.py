@@ -23,6 +23,8 @@ import random
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 import streamlit as st
+from bs4 import BeautifulSoup
+import re
 
 
 
@@ -230,6 +232,8 @@ class LinkedInScraper:
             Liste de dictionnaires contenant les données des posts
         """
         posts_data = []
+        all_mcomments = []
+        comments_data = []
         
         try:
             print(f"📊 Extraction de {max_posts} posts maximum...")
@@ -270,23 +274,52 @@ class LinkedInScraper:
                     try:
                         comments = post.find_element(By.CSS_SELECTOR, ".social-details-social-counts__comments")
                         comments_count = int(''.join(filter(str.isdigit, comments.text)))
+                        # comment_texte = self.extract_comments_from_post(post, self.driver)
+                        # print(comment_texte)
+
                     except (NoSuchElementException, ValueError):
                         comments_count = 0
                     
                     # Analyser le sentiment
-                    sentiment, score = self.analyze_sentiment(post_text)
+                    # sentiment, score = self.analyze_sentiment(post_text)
                     topic = self.classify_topic(post_text)
+
+                    # Extraire les commentaires du post
+                    print(f"   📝 Extraction des commentaires du post {idx+1}...")
+                    post_comments = self.extract_comments_from_post(post)
+                    print("comments of a post : ", post_comments)
+
+                    score_total = 0
+                    for comment in post_comments:
+
+                        sentiment, score = self.pipeline_nlp(post_text)
+                        comment_row = {
+                            'date': post_date,
+                            'comment': comment,
+                            'sentiment': sentiment,
+                            'score': score,
+                            'topic': topic,
+                            'post_id': idx,
+                            'post_text': post_text[:20],
+                        }
+                        score_total += score
+                        comments_data.append(comment_row)
+
+                    post_score = score_total / len(post_comments)
+                    post_sentiment = self.classifier_sentiment(post_score)
                     
                     post_data = {
                         'date': post_date,
                         'topic': topic,
-                        'comment': post_text,
-                        'sentiment': sentiment,
-                        'score': score,
+                        'sentiment': post_sentiment,
+                        'score': post_score,
                         'reactions': reactions_count,
-                        'comments': comments_count,
+                        'comments': len(post_comments),
                         'engagement': reactions_count + comments_count
                     }
+
+                    all_mcomments.append(post_comments)
+                    # print(new_posts)
                     
                     posts_data.append(post_data)
                     print(f"   ✅ Post {idx+1}/{min(len(posts), max_posts)} extrait - {topic} ({sentiment})")
@@ -296,12 +329,380 @@ class LinkedInScraper:
                     continue
             
             print(f"✅ {len(posts_data)} posts extraits avec succès!")
-            return posts_data
+            print("all_mcomments")
+            # print(all_mcomments)
+
+            print("posts_data :", posts_data)
+            print("comments_data :", comments_data)
+            # return posts_data
+            return posts_data, comments_data
             
         except Exception as e:
             print(f"❌ Erreur lors de l'extraction: {e}")
-            return posts_data
+            return posts_data, comments_data
     
+    def extract_comments_from_post1(self, post_element, driver):
+        """Cliquer sur le bouton commentaire et récupérer les commentaires"""
+        comments = []
+        
+        try:
+            # Trouver le bouton de commentaires
+            comment_button_selectors = [
+                "button[aria-label*='comment']",
+                "//button[contains(., 'comment')]",
+                ".social-details-social-counts__comments-button"
+            ]
+            
+            comment_button = None
+            for selector in comment_button_selectors:
+                try:
+                    if selector.startswith("//"):
+                        comment_button = post_element.find_element(By.XPATH, selector)
+                    else:
+                        comment_button = post_element.find_element(By.CSS_SELECTOR, selector)
+                    
+                    if comment_button.is_displayed():
+                        print(f"✅ Bouton trouvé avec: {selector}")
+                        break
+                    else:
+                        comment_button = None
+                except Exception:
+                    continue
+            
+            if comment_button:
+                # Scroll et clic
+                driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", comment_button)
+                time.sleep(2)
+                
+                button_text = comment_button.text.strip()
+                print(f"📝 Bouton texte: '{button_text}'")
+                
+                # Clic JavaScript
+                driver.execute_script("arguments[0].click();", comment_button)
+                print("🖱️ Clic JavaScript réussi")
+                
+                # Attendre que la modale des commentaires s'ouvre
+                print("🔄 Attente du chargement des commentaires...")
+                time.sleep(5)
+                
+                # MAIN CORRECTION: Attendre spécifiquement la modale des commentaires
+                wait = WebDriverWait(driver, 10)
+                
+                # Essayer de trouver la modale des commentaires
+                modal_selectors = [
+                    ".comments-overlay",
+                    ".scaffold-finite-scroll__content", 
+                    ".comments-comments-list__container",
+                    ".artdeco-modal__content"
+                ]
+                
+                modal_element = None
+                for selector in modal_selectors:
+                    try:
+                        modal_element = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, selector)))
+                        print(f"✅ Modale trouvée avec: {selector}")
+                        break
+                    except:
+                        continue
+                
+                if modal_element:
+                    # Scroll dans la modale pour charger tous les commentaires
+                    print("📜 Défilement dans la modale...")
+                    for i in range(3):
+                        driver.execute_script("arguments[0].scrollTop = arguments[0].scrollHeight", modal_element)
+                        time.sleep(2)
+                    
+                    # Attendre un peu plus pour le chargement
+                    time.sleep(3)
+                    
+                    # MAIN FIX: Rechercher les commentaires dans toute la page une fois la modale ouverte
+                    comment_selectors = [
+                        "span.coments-comment-item_main-content",  # Votre sélecteur exact
+                        ".comments-comment-item",
+                        ".feed-shared-comment__content",
+                        ".comment__content",
+                        "[data-test-id='comment']",
+                        ".update-components-text"  # Le contenu texte des commentaires
+                    ]
+                    
+                    all_comments_found = []
+                    for selector in comment_selectors:
+                        try:
+                            comment_elements = driver.find_elements(By.CSS_SELECTOR, selector)
+                            if comment_elements:
+                                print(f"✅ {len(comment_elements)} éléments trouvés avec: {selector}")
+                                
+                                for comment_element in comment_elements:
+                                    try:
+                                        text = comment_element.text.strip()
+                                        if text and len(text) < 100:  # Filtrer les textes courts
+                                            # Éviter les doublons
+                                            if text not in all_comments_found:
+                                                all_comments_found.append(text)
+                                                print(f"💬 Commentaire: {text[:80]}...")
+                                    except Exception as e:
+                                        continue
+                        except Exception:
+                            continue
+                    
+                    comments = all_comments_found
+                    
+                    # Alternative avec BeautifulSoup sur le HTML de la modale
+                    # if not comments:
+                    #     print("🔄 Essai avec BeautifulSoup sur le HTML complet...")
+                    #     soup = BeautifulSoup(driver.page_source, "html.parser")
+                        
+                    #     # Essayer plusieurs sélecteurs
+                    #     comment_texts = []
+                        
+                    #     # Sélecteur exact de votre HTML
+                    #     comment_spans = soup.find_all("span", class_="coments-comment-item_main-content")
+                    #     for span in comment_spans:
+                    #         text = span.get_text(separator=" ", strip=True)
+                    #         if text and len(text) > 10:
+                    #             comment_texts.append(text)
+                        
+                    #     # Autres sélecteurs possibles
+                    #     if not comment_texts:
+                    #         comment_divs = soup.find_all("div", class_="update-components-text")
+                    #         for div in comment_divs:
+                    #             text = div.get_text(separator=" ", strip=True)
+                    #             if text and len(text) > 10:
+                    #                 comment_texts.append(text)
+                        
+                    #     # Filtrer les doublons
+                    #     comments = list(dict.fromkeys(comment_texts))
+                        
+                    #     for comment in comments:
+                    #         print(f"💬 Commentaire BS: {comment[:80]}...")
+                
+                else:
+                    print("❌ Modale des commentaires non trouvée")
+                    
+                # Fermer la modale
+                self.close_modal(driver)
+                
+            else:
+                print("❌ Aucun bouton de commentaires trouvé dans ce post")
+                
+        except Exception as e:
+            print(f"❌ Erreur générale: {e}")
+            import traceback
+            traceback.print_exc()
+            # Essayer de fermer la modale en cas d'erreur
+            try:
+                self.close_modal(driver)
+            except:
+                pass
+        
+        return comments
+    
+    def extract_comments_from_post(self, post_element):
+        comments_data = []
+        
+        try:
+            # Chercher le bouton "Commentaire" dans la barre d'actions
+            try:
+                # Essayer plusieurs sélecteurs pour le bouton commentaire
+                comment_button_selectors = [
+                    "button.comment-button",
+                    "button[aria-label*='omment']",
+                    ".feed-shared-social-action-bar__action-button--comment",
+                    "button.social-actions-button--comment"
+                ]
+                
+                comments_button = None
+                for selector in comment_button_selectors:
+                    try:
+                        comments_button = post_element.find_element(By.CSS_SELECTOR, selector)
+                        break
+                    except NoSuchElementException:
+                        continue
+                
+                if not comments_button:
+                    print("      Pas de bouton commentaires trouvé")
+                    return comments_data
+                
+                # Scroll et clic avec JavaScript pour éviter l'interception
+                self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", comments_button)
+                self.random_delay(0.5, 1)
+                
+                # Utiliser JavaScript pour cliquer (évite les interceptions)
+                self.driver.execute_script("arguments[0].click();", comments_button)
+                self.random_delay(1.5, 2.5)
+                
+            except Exception as e:
+                print(f"      Erreur lors du clic sur commentaires: {e}")
+                return comments_data
+            
+            # Cliquer sur "Afficher plus de commentaires" si disponible
+            max_attempts = 5
+            for attempt in range(max_attempts):
+                try:
+                    show_more_selectors = [
+                        "button.comments-comments-list__show-more-button",
+                        "button[aria-label*='more comment']",
+                        ".artdeco-button--tertiary.comments-comments-list__show-more-button"
+                    ]
+                    
+                    show_more = None
+                    for selector in show_more_selectors:
+                        try:
+                            show_more = self.driver.find_element(By.CSS_SELECTOR, selector)
+                            if show_more and show_more.is_displayed():
+                                break
+                        except NoSuchElementException:
+                            continue
+                    
+                    if show_more and show_more.is_displayed():
+                        # Clic avec JavaScript
+                        self.driver.execute_script("arguments[0].click();", show_more)
+                        self.random_delay(1, 1.5)
+                    else:
+                        break
+                        
+                except Exception as e:
+                    print(f"      Fin du chargement des commentaires")
+                    break
+            
+            # Extraire tous les commentaires
+            self.random_delay(1, 1.5)
+            
+            # Chercher les commentaires avec plusieurs sélecteurs possibles
+            comment_selectors = [
+                ".comments-comment-item",
+                "article.comments-comment-item",
+                ".comments-comment-entity"
+            ]
+            
+            comment_elements = []
+            for selector in comment_selectors:
+                try:
+                    comment_elements = post_element.find_elements(By.CSS_SELECTOR, selector)
+                    if comment_elements:
+                        break
+                except NoSuchElementException:
+                    continue
+            
+            print(f"      {len(comment_elements)} commentaires trouvés")
+            
+            for idx, comment_elem in enumerate(comment_elements):
+                try:
+                    # # Nom de l'auteur du commentaire
+                    # try:
+                    #     author = comment_elem.find_element(By.CSS_SELECTOR, 
+                    #         ".comments-post-meta__name-text, .comments-comment-meta__name").text.strip()
+                    # except NoSuchElementException:
+                    #     author = "Anonyme"
+                    
+                    # # Titre/Position de l'auteur
+                    # try:
+                    #     author_title = comment_elem.find_element(By.CSS_SELECTOR, 
+                    #         ".comments-comment-meta__headline, .comments-post-meta__headline").text.strip()
+                    # except NoSuchElementException:
+                    #     author_title = ""
+                    
+                    # Texte du commentaire
+                    try:
+                        comment_text = comment_elem.find_element(By.CSS_SELECTOR, 
+                            ".comments-comment-item__main-content, .comments-comment-item-content-body__text").text.strip()
+                    except NoSuchElementException:
+                        comment_text = ""
+                    
+                    # # Date du commentaire
+                    # try:
+                    #     comment_date = comment_elem.find_element(By.CSS_SELECTOR, 
+                    #         ".comments-comment-meta__timestamp, .feed-shared-actor__sub-description").text.strip()
+                    #     parsed_date = self.parse_linkedin_date(comment_date)
+                    # except NoSuchElementException:
+                    #     parsed_date = datetime.now().strftime('%Y-%m-%d')
+                    
+                    # # Nombre de réactions sur le commentaire
+                    # try:
+                    #     reactions_elem = comment_elem.find_element(By.CSS_SELECTOR, 
+                    #         ".comments-comment-social-bar__reactions-count")
+                    #     reactions = int(''.join(filter(str.isdigit, reactions_elem.text)))
+                    # except (NoSuchElementException, ValueError):
+                    #     reactions = 0
+                    
+                    # Analyser le sentiment du commentaire
+                    # sentiment, score = self.analyze_sentiment(comment_text)
+                    
+                    # comment_data = {
+                    #     'author': author,
+                    #     'author_title': author_title,
+                    #     'comment_text': comment_text,
+                    #     'date': parsed_date,
+                    #     'reactions': reactions,
+                    #     'sentiment': sentiment,
+                    #     'sentiment_score': score
+                    # }
+
+                    # comment_data = {
+                    #     # 'post_id': post_element.get_attribute('id'),
+                    #     'comment_text': comment_text,
+                    #     'date': parsed_date,
+                    # }
+
+
+                    
+                    # comments_data.append(comment_data)
+                    comments_data.append(comment_text)
+                    
+                except Exception as e:
+                    print(f"      ⚠️ Erreur extraction commentaire {idx+1}: {e}")
+                    continue
+            
+            return comments_data
+            
+        except Exception as e:
+            print(f"      ❌ Erreur lors de l'extraction des commentaires: {e}")
+            return comments_data
+
+    def close_modal(sell, driver):
+        """Fermer la modale des commentaires"""
+        try:
+            # Méthode 1: Bouton de fermeture explicite
+            close_selectors = [
+                "button[aria-label='Fermer']",
+                "button[aria-label='Close']",
+                ".artdeco-modal__dismiss",
+                "button.artdeco-button--circle",
+                "button[data-test-modal-close-btn]"
+            ]
+            
+            for selector in close_selectors:
+                try:
+                    close_btn = WebDriverWait(driver, 3).until(
+                        EC.element_to_be_clickable((By.CSS_SELECTOR, selector))
+                    )
+                    driver.execute_script("arguments[0].click();", close_btn)
+                    print("✅ Modale fermée avec bouton")
+                    time.sleep(2)
+                    return
+                except:
+                    continue
+            
+            # Méthode 2: Cliquer sur l'overlay/backdrop
+            try:
+                overlay = driver.find_element(By.CSS_SELECTOR, ".artdeco-modal-overlay")
+                driver.execute_script("arguments[0].click();", overlay)
+                print("✅ Modale fermée via overlay")
+                time.sleep(2)
+                return
+            except:
+                pass
+                
+            # Méthode 3: Échap
+            from selenium.webdriver.common.keys import Keys
+            body = driver.find_element(By.TAG_NAME, "body")
+            body.send_keys(Keys.ESCAPE)
+            print("✅ Modale fermée avec Échap")
+            time.sleep(2)
+            
+        except Exception as e:
+            print(f"⚠️ Erreur lors de la fermeture: {e}")
+
     def parse_linkedin_date(self, date_text):
         """
         Parse le texte de date LinkedIn (ex: "il y a 2 jours")
@@ -337,28 +738,53 @@ class LinkedInScraper:
             return today.strftime('%Y-%m-%d')
     
     def analyze_sentiment(self, text):
-        """
-        Analyse le sentiment d'un texte
-        
-        Args:
-            text: Texte à analyser
-            
-        Returns:
-            Tuple (sentiment, score)
-        """
         try:
             blob = TextBlob(text)
             polarity = blob.sentiment.polarity
-            
-            if polarity > 0.1:
-                return 'positif', polarity
-            elif polarity < -0.1:
-                return 'négatif', polarity
-            else:
-                return 'neutre', polarity
+            return polarity
+
         except:
             return 'neutre', 0.0
     
+    def pipeline_nlp(self, text):
+        # pretaitement
+        text = self.nettoyer_texte(text)
+
+        # Analyse de sentiment
+        polarite = self.analyze_sentiment(text)
+
+        # Classification de sentiment
+        sentiment = self.classifier_sentiment(polarite)
+
+        # Retourner le sentiment et la polarité
+        return sentiment, polarite
+        
+    def nettoyer_texte(self,texte):
+        """Fonction de nettoyage du texte"""
+        # Convertir en minuscules
+        texte = texte.lower()
+        # Retirer les URLs
+        texte = re.sub(r'http\S+|www\S+|https\S+', '', texte)
+        # Retirer les mentions (@username)
+        texte = re.sub(r'@\w+', '', texte)
+        # Retirer les hashtags
+        texte = re.sub(r'#\w+', '', texte)
+        # Retirer les caractères spéciaux excessifs
+        texte = re.sub(r'[^\w\s!?.,]', '', texte)
+        # Supprimer les espaces multiples
+        texte = re.sub(r'\s+', ' ', texte).strip()
+        return texte
+    
+    def classifier_sentiment(self, polarite):
+        """Classifie le sentiment basé sur la polarité"""
+        if polarite > 0.1:
+            return 'positif'
+        elif polarite < -0.1:
+            return 'négatif'
+        else:
+            return 'neutre'
+    
+
     def classify_topic(self, text):
         """
         Classifie le sujet d'un post
@@ -481,7 +907,7 @@ def main():
     # Options
     # max_posts = int(input("Nombre de posts à extraire (défaut: 30): ").strip() or "30")
     # headless = input("Mode sans interface graphique? (oui/non, défaut: non): ").lower() in ['oui', 'yes', 'o', 'y']
-    max_posts = 30
+    max_posts = 5
     headless = False
     
     print(email)
@@ -512,11 +938,13 @@ def main():
         scraper.scroll_to_load_posts(num_scrolls=int(max_posts / 5))
         
         # Extraire les posts
-        posts_data = scraper.extract_posts(max_posts=max_posts)
+        posts_data, comments_data = scraper.extract_posts(max_posts=max_posts)
         
         if posts_data:
             # Sauvegarder les données
             filename = scraper.save_to_csv(posts_data)
+            time.sleep(2 )
+            filename2 = scraper.save_to_csv(comments_data)
             
             # Afficher un résumé
             print()
@@ -524,7 +952,8 @@ def main():
             print("📊 RÉSUMÉ DE L'EXTRACTION")
             print("=" * 70)
             
-            df = pd.DataFrame(posts_data)
+            df_posts_data = pd.DataFrame(posts_data)
+            df_comments_data = pd.DataFrame(comments_data)
             
             print(f"✅ Total de posts extraits: {len(posts_data)}")
             print(f"📅 Période: {df['date'].min()} à {df['date'].max()}")
@@ -546,6 +975,8 @@ def main():
             print()
             print("📌 Prochaine étape: Importez ce fichier CSV dans l'application Streamlit")
             print("   pour visualiser l'analyse complète.")
+
+            return df_posts_data, df_comments_data
             
         else:
             print("⚠️ Aucun post n'a pu être extrait")

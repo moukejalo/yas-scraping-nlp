@@ -11,6 +11,9 @@ from datetime import datetime, timedelta
 import numpy as np
 from textblob import TextBlob
 import re
+import os
+import glob 
+from linkedin_scraper_selenium import main as main_scrapping
 
 # Configuration de la page
 st.set_page_config(
@@ -204,52 +207,87 @@ with st.sidebar:
     st.image("yas-senegal.jpeg", use_container_width=True)
     st.markdown("---")
     
-    st.subheader("⚙️ Configuration")
+    # st.subheader("⚙️ Configuration")
     
+    # data_source = st.radio(
+    #     "Source de données:",
+    #     ["Données de démonstration", "Données scrapées"]
+    # )
     data_source = st.radio(
         "Source de données:",
-        ["Données de démonstration", "Importer un fichier CSV"]
+        ["Données scrapées"]
     )
+
+    df_post = None
+    df_comments = None
     
     uploaded_file = None
-    if data_source == "Importer un fichier CSV":
-        uploaded_file = st.file_uploader("Choisir un fichier CSV", type=['csv'])
-        st.info("Format attendu: date, topic, comment")
+    uploaded_file = None
+    if data_source == "Données scrapées":
+        # click on button start the scraper
+        if st.button("Scraper LinkedIn"):
+            st.write("Scrapping encours")
+            df_post, df_comments = main_scrapping()
+            st.write("Scrapping termine")
+            # csv_files = glob.glob("linkedin_yas_posts_*.csv")
+            # csv_files = glob.glob("linkedin_yas_posts_20251114_121554.csv")
+            # if not csv_files:
+            #     st.error("Aucun fichier trouvé.")
+            # else:
+            #     # Extracting the timestamp from each filename and sort
+            #     def extract_timestamp(filename):
+            #         # Example: linkedin_yas_posts_20251111_160420.csv
+            #         base = os.path.basename(filename)
+            #         ts_str = base.replace("linkedin_yas_posts_", "").replace(".csv", "")
+            #         return datetime.strptime(ts_str, "%Y%m%d_%H%M%S")
+                
+            #     uploaded_file = max(csv_files, key=extract_timestamp)
     
-    st.markdown("---")
-    st.subheader("📅 Période")
-    date_range = st.slider("Nombre de jours", 7, 90, 30)
+    # st.markdown("---")
+    # st.subheader("📅 Période")
+    # date_range = st.slider("Nombre de jours", 7, 90, 30)
     
-    st.markdown("---")
-    st.markdown("### 📖 Guide d'utilisation")
-    with st.expander("Comment utiliser cette app?"):
-        st.markdown("""
-        1. **Données**: Utilisez les données de démo ou importez votre CSV
-        2. **Analyse**: Consultez les statistiques et graphiques
-        3. **Recommandations**: Suivez les actions prioritaires
-        4. **Export**: Téléchargez le rapport complet
-        """)
+    # st.markdown("---")
+    # st.markdown("### 📖 Guide d'utilisation")
+    # with st.expander("Comment utiliser cette app?"):
+    #     st.markdown("""
+    #     1. **Données**: Utilisez les données de démo ou importez votre CSV
+    #     2. **Analyse**: Consultez les statistiques et graphiques
+    #     3. **Recommandations**: Suivez les actions prioritaires
+    #     4. **Export**: Téléchargez le rapport complet
+    #     """)
 
 # Chargement des données
 if data_source == "Données de démonstration":
-    df = generate_mock_data(date_range)
-    st.info("ℹ️ Vous utilisez des données simulées. Pour analyser vos vraies données LinkedIn, importez un fichier CSV.")
+    st.markdown("---")
+    # df = generate_mock_data(date_range)
+    # st.write(df.head())
+    # st.info("ℹ️ Vous utilisez des données simulées. Pour analyser vos vraies données LinkedIn, importez un fichier CSV.")
 else:
-    if uploaded_file is not None:
+    if df_post is not None:
+    # if True:
         try:
-            df = pd.read_csv(uploaded_file)
+            # df = pd.read_csv(uploaded_file)
+            df = df_post
+            st.write(df.head())
+
+            # df_comments = pd.read_csv("linkedin_yas_posts_20251114_121556.csv")
+            # df_comments = pd.read_csv("linkedin_yas_posts_20251114_121556.csv")
+            st.write(df_comments.head())
+
+            # df = df_post
             # Analyse de sentiment si pas déjà présent
-            if 'sentiment' not in df.columns:
-                with st.spinner("Analyse des sentiments en cours..."):
-                    results = df['comment'].apply(lambda x: pd.Series(analyze_sentiment(x)))
-                    df['sentiment'] = results[0]
-                    df['score'] = results[1]
-            st.success(f"✅ {len(df)} posts importés et analysés")
+            # if 'sentiment' not in df.columns:
+            #     with st.spinner("Analyse des sentiments en cours..."):
+            #         results = df['comment'].apply(lambda x: pd.Series(analyze_sentiment(x)))
+            #         df['sentiment'] = results[0]
+            #         df['score'] = results[1]
+            # st.success(f"✅ {len(df)} posts importés et analysés")
         except Exception as e:
             st.error(f"❌ Erreur lors du chargement du fichier: {e}")
             st.stop()
     else:
-        st.warning("⚠️ Veuillez importer un fichier CSV")
+        st.warning("⚠️ Cliquez sur le bouton 'Scraper LinkedIn' pour lancer le scrapping. Ensuite veuillez patienter")
         st.stop()
 
 # Calcul des statistiques
@@ -261,6 +299,16 @@ neutre_count = len(df[df['sentiment'] == 'neutre'])
 positif_pct = (positif_count / total_posts * 100) if total_posts > 0 else 0
 negatif_pct = (negatif_count / total_posts * 100) if total_posts > 0 else 0
 neutre_pct = (neutre_count / total_posts * 100) if total_posts > 0 else 0
+
+# Calcul des statistiques des commentaires
+total_comments = len(df_comments)
+positif_comment_count = len(df_comments[df_comments['sentiment'] == 'positif'])
+negatif_comment_count = len(df_comments[df_comments['sentiment'] == 'négatif'])
+neutre_comment_count = len(df_comments[df_comments['sentiment'] == 'neutre'])
+
+positif_comment_pct = (positif_comment_count / total_comments * 100) if total_comments > 0 else 0
+negatif_comment_pct = (negatif_comment_count / total_comments * 100) if total_comments > 0 else 0
+neutre_comment_pct = (neutre_comment_count / total_comments * 100) if total_comments > 0 else 0
 
 # Métriques principales
 col1, col2, col3, col4 = st.columns(4)
@@ -285,11 +333,37 @@ with col4:
 
 st.markdown("---")
 
+
+# Métriques principales
+col1c, col2c, col3c, col4c = st.columns(4)
+
+with col1c:
+    st.metric("📝 Total Commentaires", total_comments)
+
+with col2c:
+    st.metric("✅ Positif", f"{positif_comment_pct:.1f}%", 
+              delta=f"{positif_comment_count} commentaires", 
+              delta_color="normal")
+
+with col3c:
+    st.metric("❌ Négatif", f"{negatif_pct:.1f}%", 
+              delta=f"{negatif_comment_count} commentaires", 
+              delta_color="inverse")
+
+with col4c:
+    st.metric("➖ Neutre", f"{neutre_comment_pct:.1f}%", 
+              delta=f"{neutre_comment_count} commentaires", 
+              delta_color="off")
+
+st.markdown("---")
+
+
+
 # Graphiques
 col1, col2 = st.columns(2)
 
 with col1:
-    st.subheader("📊 Distribution des Sentiments")
+    st.subheader("📊  Sentiments des postes")
     
     fig_pie = go.Figure(data=[go.Pie(
         labels=['Positif', 'Négatif', 'Neutre'],
@@ -308,29 +382,53 @@ with col1:
     
     st.plotly_chart(fig_pie, use_container_width=True)
 
+
 with col2:
-    st.subheader("📈 Évolution dans le Temps")
-    
-    df_time = df.groupby(['date', 'sentiment']).size().reset_index(name='count')
-    
-    fig_line = px.line(
-        df_time, 
-        x='date', 
-        y='count', 
-        color='sentiment',
-        color_discrete_map={'positif': '#10b981', 'négatif': '#ef4444', 'neutre': '#94a3b8'},
-        markers=True
-    )
-    
-    fig_line.update_layout(
+    st.subheader("📊  Sentiments detaille des commentaires")
+
+    # Bar chart (Histogram style)
+    fig_bar = go.Figure(data=[
+        go.Bar(
+            x=['Positif', 'Négatif', 'Neutre'],      # categories
+            y=[positif_comment_count, negatif_comment_count, neutre_comment_count],   # values
+            marker=dict(color=['#10b981', '#ef4444', '#94a3b8']),  # colors
+            text=[positif_comment_count, negatif_comment_count, neutre_comment_count],
+            textposition='auto'
+        )
+    ])
+
+    fig_bar.update_layout(
+        xaxis_title="Sentiments",
+        yaxis_title="Nombre de commentaire",
         height=400,
-        xaxis_title="Date",
-        yaxis_title="Nombre de posts",
-        margin=dict(t=20, b=20, l=20, r=20),
-        legend=dict(title="Sentiment")
+        margin=dict(t=20, b=20, l=20, r=20)
     )
+
+    st.plotly_chart(fig_bar, use_container_width=True)
+
+# with col2:
+    # st.subheader("📈 Évolution dans le Temps")
     
-    st.plotly_chart(fig_line, use_container_width=True)
+    # df_time = df.groupby(['date', 'sentiment']).size().reset_index(name='count')
+    
+    # fig_line = px.line(
+    #     df_time, 
+    #     x='date', 
+    #     y='count', 
+    #     color='sentiment',
+    #     color_discrete_map={'positif': '#10b981', 'négatif': '#ef4444', 'neutre': '#94a3b8'},
+    #     markers=True
+    # )
+    
+    # fig_line.update_layout(
+    #     height=400,
+    #     xaxis_title="Date",
+    #     yaxis_title="Nombre de posts",
+    #     margin=dict(t=20, b=20, l=20, r=20),
+    #     legend=dict(title="Sentiment")
+    # )
+    
+    # st.plotly_chart(fig_line, use_container_width=True)
 
 # Analyse par sujet
 st.subheader("🎯 Analyse par Sujet")
@@ -391,81 +489,86 @@ else:
 # Détail des posts
 st.subheader("📋 Détail des Posts")
 
-filter_sentiment = st.multiselect(
-    "Filtrer par sentiment:",
-    options=['positif', 'négatif', 'neutre'],
-    default=['positif', 'négatif', 'neutre']
-)
+st.write(df)
 
-filter_topic = st.multiselect(
-    "Filtrer par sujet:",
-    options=df['topic'].unique().tolist(),
-    default=df['topic'].unique().tolist()
-)
 
-df_filtered = df[
-    (df['sentiment'].isin(filter_sentiment)) & 
-    (df['topic'].isin(filter_topic))
-].sort_values('date', ascending=False)
 
-# Affichage avec couleurs
-def color_sentiment(val):
-    colors = {'positif': 'background-color: #218050', 
-              'négatif': 'background-color: #9c2222', 
-              'neutre': 'background-color: #8c9dad'}
-    return colors.get(val, '')
 
-st.dataframe(
-    df_filtered[['date', 'topic', 'sentiment', 'comment', 'engagement']]
-    .style.applymap(color_sentiment, subset=['sentiment']),
-    use_container_width=True,
-    height=400
-)
+# filter_sentiment = st.multiselect(
+#     "Filtrer par sentiment:",
+#     options=['positif', 'négatif', 'neutre'],
+#     default=['positif', 'négatif', 'neutre']
+# )
 
-# Export des résultats
-st.markdown("---")
-st.subheader("📥 Export des Résultats")
+# filter_topic = st.multiselect(
+#     "Filtrer par sujet:",
+#     options=df['topic'].unique().tolist(),
+#     default=df['topic'].unique().tolist()
+# )
 
-col1, col2 = st.columns(2)
+# df_filtered = df[
+#     (df['sentiment'].isin(filter_sentiment)) & 
+#     (df['topic'].isin(filter_topic))
+# ].sort_values('date', ascending=False)
 
-with col1:
-    csv = df_filtered.to_csv(index=False).encode('utf-8')
-    st.download_button(
-        label="📊 Télécharger les données (CSV)",
-        data=csv,
-        file_name=f"yas_sentiment_analysis_{datetime.now().strftime('%Y%m%d')}.csv",
-        mime="text/csv"
-    )
+# # Affichage avec couleurs
+# def color_sentiment(val):
+#     colors = {'positif': 'background-color: #218050', 
+#               'négatif': 'background-color: #9c2222', 
+#               'neutre': 'background-color: #8c9dad'}
+#     return colors.get(val, '')
 
-with col2:
-    # Créer un rapport texte
-    report = f"""
-RAPPORT D'ANALYSE DE SENTIMENTS - YAS
-Date: {datetime.now().strftime('%d/%m/%Y')}
-Période analysée: {date_range} jours
+# st.dataframe(
+#     df_filtered[['date', 'topic', 'sentiment', 'comment', 'engagement']]
+#     .style.applymap(color_sentiment, subset=['sentiment']),
+#     use_container_width=True,
+#     height=400
+# )
 
-STATISTIQUES GLOBALES:
-- Total de posts analysés: {total_posts}
-- Sentiments positifs: {positif_pct:.1f}% ({positif_count} posts)
-- Sentiments négatifs: {negatif_pct:.1f}% ({negatif_count} posts)
-- Sentiments neutres: {neutre_pct:.1f}% ({neutre_count} posts)
+# # Export des résultats
+# st.markdown("---")
+# st.subheader("📥 Export des Résultats")
 
-SUJETS PROBLÉMATIQUES:
-"""
+# col1, col2 = st.columns(2)
+
+# with col1:
+#     csv = df_filtered.to_csv(index=False).encode('utf-8')
+#     st.download_button(
+#         label="📊 Télécharger les données (CSV)",
+#         data=csv,
+#         file_name=f"yas_sentiment_analysis_{datetime.now().strftime('%Y%m%d')}.csv",
+#         mime="text/csv"
+#     )
+
+# with col2:
+#     # Créer un rapport texte
+#     report = f"""
+# RAPPORT D'ANALYSE DE SENTIMENTS - YAS
+# Date: {datetime.now().strftime('%d/%m/%Y')}
+# Période analysée: {date_range} jours
+
+# STATISTIQUES GLOBALES:
+# - Total de posts analysés: {total_posts}
+# - Sentiments positifs: {positif_pct:.1f}% ({positif_count} posts)
+# - Sentiments négatifs: {negatif_pct:.1f}% ({negatif_count} posts)
+# - Sentiments neutres: {neutre_pct:.1f}% ({neutre_count} posts)
+
+# SUJETS PROBLÉMATIQUES:
+# """
     
-    for i, topic in enumerate(problematic_topics.index[:3], 1):
-        score = problematic_topics.loc[topic, 'score']
-        report += f"\n{i}. {topic} (Score: {score:.1f}%)\n"
-        recs = get_recommendations(topic, score)
-        for action in recs['actions']:
-            report += f"   - {action}\n"
+#     for i, topic in enumerate(problematic_topics.index[:3], 1):
+#         score = problematic_topics.loc[topic, 'score']
+#         report += f"\n{i}. {topic} (Score: {score:.1f}%)\n"
+#         recs = get_recommendations(topic, score)
+#         for action in recs['actions']:
+#             report += f"   - {action}\n"
     
-    st.download_button(
-        label="📄 Télécharger le rapport (TXT)",
-        data=report,
-        file_name=f"rapport_yas_{datetime.now().strftime('%Y%m%d')}.txt",
-        mime="text/plain"
-    )
+#     st.download_button(
+#         label="📄 Télécharger le rapport (TXT)",
+#         data=report,
+#         file_name=f"rapport_yas_{datetime.now().strftime('%Y%m%d')}.txt",
+#         mime="text/plain"
+#     )
 
 # Footer
 st.markdown("---")
