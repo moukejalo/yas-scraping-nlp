@@ -302,8 +302,8 @@ if df_post is not None:
 # if True:
     try:
         df = df_post
-        st.write(df.head())
-        st.write(df_comments.head())
+        # st.write(df.head())
+        # st.write(df_comments.head())
     except Exception as e:
         st.error(f"❌ Erreur lors du chargement du fichier: {e}")
         st.stop()
@@ -355,28 +355,28 @@ with col4:
 st.markdown("---")
 
 
-# Métriques principales
-col1c, col2c, col3c, col4c = st.columns(4)
+# # Métriques principales
+# col1c, col2c, col3c, col4c = st.columns(4)
 
-with col1c:
-    st.metric("📝 Total Commentaires", total_comments)
+# with col1c:
+#     st.metric("📝 Total Commentaires", total_comments)
 
-with col2c:
-    st.metric("✅ Positif", f"{positif_comment_pct:.1f}%", 
-              delta=f"{positif_comment_count} commentaires", 
-              delta_color="normal")
+# with col2c:
+#     st.metric("✅ Positif", f"{positif_comment_pct:.1f}%", 
+#               delta=f"{positif_comment_count} commentaires", 
+#               delta_color="normal")
 
-with col3c:
-    st.metric("❌ Négatif", f"{negatif_pct:.1f}%", 
-              delta=f"{negatif_comment_count} commentaires", 
-              delta_color="inverse")
+# with col3c:
+#     st.metric("❌ Négatif", f"{negatif_pct:.1f}%", 
+#               delta=f"{negatif_comment_count} commentaires", 
+#               delta_color="inverse")
 
-with col4c:
-    st.metric("➖ Neutre", f"{neutre_comment_pct:.1f}%", 
-              delta=f"{neutre_comment_count} commentaires", 
-              delta_color="off")
+# with col4c:
+#     st.metric("➖ Neutre", f"{neutre_comment_pct:.1f}%", 
+#               delta=f"{neutre_comment_count} commentaires", 
+#               delta_color="off")
 
-st.markdown("---")
+# st.markdown("---")
 
 
 
