@@ -50,7 +50,7 @@ class LinkedInScraper:
         chrome_options.add_argument("--disable-blink-features=AutomationControlled")
         chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
 
-        # chrome_options.add_argument("--headless=new")        # Required for server
+        chrome_options.add_argument("--headless=new")        # Required for server
         chrome_options.add_argument("--no-sandbox")          # Required for EC2
         chrome_options.add_argument("--disable-dev-shm-usage") # Fixes shared memory issue
         chrome_options.add_argument("--disable-gpu")
@@ -62,6 +62,12 @@ class LinkedInScraper:
         # Add these to your Chrome options
         chrome_options.add_argument('--memory-pressure-off')
         chrome_options.add_argument('--max_old_space_size=4096')  # Increase memory limit
+
+        # This makes headless harder to detect
+        self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {
+            "userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        })
+        self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
 
         self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
         # """
