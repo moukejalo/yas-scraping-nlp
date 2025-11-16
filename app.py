@@ -264,7 +264,7 @@ with st.sidebar:
     uploaded_file = None
     if data_source == "Données scrapées":
         # get latest file
-        folder = "data"
+        folder = "prod-data"
         latest_post_file = get_latest_file(folder, "posts")
         latest_comment_file = get_latest_file(folder, "comments")
         if latest_post_file and latest_comment_file:

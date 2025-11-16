@@ -836,7 +836,7 @@ class LinkedInScraper:
         """
 
         # Define the save directory
-        save_dir = "data"
+        save_dir = "prod-data"
         os.makedirs(save_dir, exist_ok=True)  # ensures folder exists, even if deleted later
 
 
