@@ -63,13 +63,16 @@ class LinkedInScraper:
         chrome_options.add_argument('--memory-pressure-off')
         chrome_options.add_argument('--max_old_space_size=4096')  # Increase memory limit
 
+        
+
+        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+
         # This makes headless harder to detect
         self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {
             "userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         })
         self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-
-        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+        
         # """
         # Initialise le scraper
         
