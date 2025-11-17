@@ -435,6 +435,7 @@ topic_analysis['total'] = topic_analysis.sum(axis=1)
 topic_analysis['score'] = ((topic_analysis.get('positif', 0) - topic_analysis.get('négatif', 0)) / topic_analysis['total'] * 100)
 topic_analysis = topic_analysis.sort_values('score')
 
+st.write("topic_analysis")
 st.write(topic_analysis)
 
 fig_bar = go.Figure()
