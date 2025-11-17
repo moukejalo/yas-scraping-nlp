@@ -1,0 +1,27 @@
+﻿date,topic,sentiment,score,reactions,comments,engagement
+2025-11-14,Service Client,positif,0.5,27,1,28
+2025-11-14,Autre,positif,0.37777777777777777,58,1,59
+2025-11-14,Couverture,positif,0.37777777777777777,71,2,73
+2025-11-14,Autre,positif,0.3333333333333333,44,3,47
+2025-11-14,Couverture,positif,0.25,48,4,52
+2025-11-14,Application,positif,0.5,435,3,438
+2025-11-14,Autre,positif,0.5,42,1,43
+2025-11-14,Service Client,positif,0.25,129,3,132
+2025-11-14,Réseau,positif,0.26666666666666666,29,1,30
+2025-11-14,Service Client,positif,0.3181818181818182,101,2,103
+2025-11-14,Service Client,neutre,0.1,133,2,135
+2025-11-14,Autre,positif,0.5,53,6,59
+2025-11-14,Service Client,positif,0.5,481,24,505
+2025-11-14,Service Client,negatif,-0.25,119,14,133
+2025-11-14,Service Client,positif,0.4375,152,5,157
+2025-11-14,Couverture,neutre,0.075,134,4,138
+2025-11-14,Service Client,positif,0.5,35,1,36
+2025-11-14,Service Client,positif,0.19999999999999998,31,1,32
+2025-11-14,Service Client,positif,0.5,12,1,13
+2025-11-14,Service Client,negatif,-0.5,78,3,81
+2025-11-14,Service Client,positif,0.28125,296,14,311
+2025-11-14,Autre,positif,0.4375,72,2,74
+2025-11-14,Service Client,positif,0.25,282,5,287
+2025-11-14,Autre,positif,0.5,32,2,34
+2025-11-14,Réseau,positif,0.5,82,1,83
+2025-11-14,Couverture,negatif,-0.25,47,3,50
