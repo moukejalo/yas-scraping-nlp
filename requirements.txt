@@ -11,6 +11,7 @@ python-dotenv
 beautifulsoup4
 transformers 
 torch
+langdetect
 
 # # Requirements pour le scraper LinkedIn avec Selenium
 
