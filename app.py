@@ -486,7 +486,9 @@ else:
 # Détail des posts
 st.subheader("📋 Détail des Posts")
 
-st.write(df)
+dff = df[['date', 'topic', 'sentiment', 'score']]
+
+st.write(dff.head(5))
 
 # Footer
 st.markdown("---")
