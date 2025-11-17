@@ -381,7 +381,7 @@ st.markdown("---")
 
 
 # Graphiques
-col1, col2 = st.columns(2)
+col1 = st.columns(1)
 
 with col1:
     st.subheader("📊  Sentiments des postes")
@@ -404,28 +404,28 @@ with col1:
     st.plotly_chart(fig_pie, use_container_width=True)
 
 
-with col2:
-    st.subheader("📊  Sentiments detaille des commentaires")
+# with col2:
+#     st.subheader("📊  Sentiments detaille des commentaires")
 
-    # Bar chart (Histogram style)
-    fig_bar = go.Figure(data=[
-        go.Bar(
-            x=['Positif', 'Négatif', 'Neutre'],      # categories
-            y=[positif_comment_count, negatif_comment_count, neutre_comment_count],   # values
-            marker=dict(color=['#10b981', '#ef4444', '#94a3b8']),  # colors
-            text=[positif_comment_count, negatif_comment_count, neutre_comment_count],
-            textposition='auto'
-        )
-    ])
+#     # Bar chart (Histogram style)
+#     fig_bar = go.Figure(data=[
+#         go.Bar(
+#             x=['Positif', 'Négatif', 'Neutre'],      # categories
+#             y=[positif_comment_count, negatif_comment_count, neutre_comment_count],   # values
+#             marker=dict(color=['#10b981', '#ef4444', '#94a3b8']),  # colors
+#             text=[positif_comment_count, negatif_comment_count, neutre_comment_count],
+#             textposition='auto'
+#         )
+#     ])
 
-    fig_bar.update_layout(
-        xaxis_title="Sentiments",
-        yaxis_title="Nombre de commentaire",
-        height=400,
-        margin=dict(t=20, b=20, l=20, r=20)
-    )
+#     fig_bar.update_layout(
+#         xaxis_title="Sentiments",
+#         yaxis_title="Nombre de commentaire",
+#         height=400,
+#         margin=dict(t=20, b=20, l=20, r=20)
+#     )
 
-    st.plotly_chart(fig_bar, use_container_width=True)
+#     st.plotly_chart(fig_bar, use_container_width=True)
 
 # Analyse par sujet
 st.subheader("🎯 Analyse par Sujet")
