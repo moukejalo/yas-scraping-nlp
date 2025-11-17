@@ -435,6 +435,8 @@ topic_analysis['total'] = topic_analysis.sum(axis=1)
 topic_analysis['score'] = ((topic_analysis.get('positif', 0) - topic_analysis.get('négatif', 0)) / topic_analysis['total'] * 100)
 topic_analysis = topic_analysis.sort_values('score')
 
+st.write(topic_analysis)
+
 fig_bar = go.Figure()
 
 if 'positif' in topic_analysis.columns:
@@ -459,7 +461,7 @@ st.markdown("---")
 st.subheader("💡 Recommandations Prioritaires")
 
 # Identifier les sujets problématiques
-problematic_topics = topic_analysis[topic_analysis['score'] < 0.5].sort_values('score')
+problematic_topics = topic_analysis[topic_analysis['score'] < 0.8].sort_values('score')
 # st.write(problematic_topics)
 # st.write("problematic_topics")
 
