@@ -21,8 +21,10 @@ config_private.py
 # ----------------------------------------------------------------------------
 
 # Fichiers CSV générés
-*.csv
+# *.csv
 data/*.csv
+data copy/*.csv
+/*.csv
 exports/*.csv
 
 # Fichiers JSON

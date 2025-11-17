@@ -19,13 +19,15 @@ from datetime import datetime
 import json
 import os
 from textblob import TextBlob
+from textblob_fr import PatternTagger, PatternAnalyzer
 import random
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 import streamlit as st
 from bs4 import BeautifulSoup
 import re
-
+from langdetect import detect
+from transformers import pipeline
 
 
 class LinkedInScraper:
@@ -50,29 +52,29 @@ class LinkedInScraper:
         chrome_options.add_argument("--disable-blink-features=AutomationControlled")
         chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
 
-        chrome_options.add_argument("--headless=new")        # Required for server
-        chrome_options.add_argument("--no-sandbox")          # Required for EC2
-        chrome_options.add_argument("--disable-dev-shm-usage") # Fixes shared memory issue
-        chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--disable-software-rasterizer")
-        chrome_options.add_argument("--remote-debugging-port=9222")
-        chrome_options.add_argument("--window-size=1920,1080")
-        chrome_options.add_argument("--disable-extensions")
+        # chrome_options.add_argument("--headless=new")        # Required for server
+        # chrome_options.add_argument("--no-sandbox")          # Required for EC2
+        # chrome_options.add_argument("--disable-dev-shm-usage") # Fixes shared memory issue
+        # chrome_options.add_argument("--disable-gpu")
+        # chrome_options.add_argument("--disable-software-rasterizer")
+        # chrome_options.add_argument("--remote-debugging-port=9222")
+        # chrome_options.add_argument("--window-size=1920,1080")
+        # chrome_options.add_argument("--disable-extensions")
 
-        # Add these to your Chrome options
-        chrome_options.add_argument('--memory-pressure-off')
-        chrome_options.add_argument('--max_old_space_size=4096')  # Increase memory limit
+        # # Add these to your Chrome options
+        # chrome_options.add_argument('--memory-pressure-off')
+        # chrome_options.add_argument('--max_old_space_size=4096')  # Increase memory limit
 
         
 
         self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
-        # This makes headless harder to detect
-        self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {
-            "userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        })
-        self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-        
+        # # This makes headless harder to detect
+        # self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {
+        #     "userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        # })
+        # self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+
         # """
         # Initialise le scraper
         
@@ -313,8 +315,7 @@ class LinkedInScraper:
 
                     score_total = 0
                     for comment in post_comments:
-
-                        sentiment, score = self.pipeline_nlp(post_text)
+                        sentiment, score = self.pipeline_nlp(comment)
                         comment_row = {
                             'date': post_date,
                             'comment': comment,
@@ -759,7 +760,7 @@ class LinkedInScraper:
         else:
             return today.strftime('%Y-%m-%d')
     
-    def analyze_sentiment(self, text):
+    def analyze_sentiment1(self, text):
         try:
             blob = TextBlob(text)
             polarity = blob.sentiment.polarity
@@ -767,13 +768,71 @@ class LinkedInScraper:
 
         except:
             return 'neutre', 0.0
+        
+    def analyse_sentiment_xlm_roberta(self, texte):
+        """
+        Utilise un modèle multilingue qui gère FR et EN sans détection
+        Le plus simple et très performant
+        """
+        classifier = pipeline("sentiment-analysis",
+                            model="cardiffnlp/twitter-xlm-roberta-base-sentiment")
+        
+        resultat = classifier(texte)[0]
+        
+        # Convertir en polarité
+        label_map = {'negative': -1, 'neutral': 0, 'positive': 1}
+        polarite = label_map.get(resultat['label'].lower(), 0) * resultat['score']
+        
+        print(f"Texte: {texte}")
+        print(f"Label: {resultat['label']}")
+        print(f"Score: {resultat['score']:.3f}")
+        print(f"Polarité: {polarite:.3f}\n")
+        return polarite
+        
+    def analyze_sentiment(self, text):
+        print(f"Texte: {text}")
+
+        # Créer un blob pour détecter la langue 
+        blob = TextBlob(text)
+        print(f"Texte bolb done: {text}")
+
+    
+        try:
+            # Détecter la langue
+            # langue = blob.detect_language()
+            langue = detect(text)
+            print(f"Langue détectée: {langue}")
+
+            if langue == 'fr':
+                # Analyse en français
+                blob_fr = TextBlob(text, pos_tagger=PatternTagger(), analyzer=PatternAnalyzer())
+                sentiment = blob_fr.sentiment
+                print(f"Texte (FR): {text}")
+                print(f"Polarité: {sentiment[0]:.2f} (négatif < 0 < positif)")
+                return sentiment[0]
+            
+            elif langue == 'en':
+                blob = TextBlob(text)
+                polarity = blob.sentiment.polarity
+                return polarity
+            
+            else:
+                texte_traduit = str(blob.translate(to='en'))
+                blob_en = TextBlob(texte_traduit)
+                sentiment = blob_en.sentiment
+                return sentiment.polarity
+
+        except:
+            print("exception is sentimnt")
+
+            return 'neutre', 0.0
     
     def pipeline_nlp(self, text):
         # pretaitement
-        text = self.nettoyer_texte(text)
+        # text = self.nettoyer_texte(text)
 
         # Analyse de sentiment
-        polarite = self.analyze_sentiment(text)
+        polarite = self.analyse_sentiment_xlm_roberta(text)
 
         # Classification de sentiment
         sentiment = self.classifier_sentiment(polarite)

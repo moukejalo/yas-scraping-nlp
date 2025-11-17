@@ -3,11 +3,14 @@ webdriver-manager
 pandas
 numpy
 textblob
+textblob-fr
 streamlit
 plotly
 openpyxl
 python-dotenv
 beautifulsoup4
+transformers 
+torch
 
 # # Requirements pour le scraper LinkedIn avec Selenium
 
