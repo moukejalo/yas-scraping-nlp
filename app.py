@@ -462,7 +462,7 @@ st.markdown("---")
 st.subheader("💡 Recommandations Prioritaires")
 
 # Identifier les sujets problématiques
-problematic_topics = topic_analysis[topic_analysis['score'] < 0.8].sort_values('score')
+problematic_topics = topic_analysis[topic_analysis['score'] < 50].sort_values('score')
 # st.write(problematic_topics)
 # st.write("problematic_topics")
 
