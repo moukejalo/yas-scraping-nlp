@@ -27,7 +27,10 @@ import streamlit as st
 from bs4 import BeautifulSoup
 import re
 from langdetect import detect
-from transformers import pipeline
+from transformers import pipeline, AutoTokenizer, AutoModelForSequenceClassification
+import warnings
+warnings.filterwarnings("ignore")
+
 
 
 class LinkedInScraper:
@@ -258,6 +261,18 @@ class LinkedInScraper:
         posts_data = []
         all_mcomments = []
         comments_data = []
+
+        # Forcer l'utilisation du tokenizer lent (évite l'erreur)
+        model_name = "cardiffnlp/twitter-xlm-roberta-base-sentiment"
+
+        tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
+        model = AutoModelForSequenceClassification.from_pretrained(model_name)
+
+        classifier = pipeline(
+            "sentiment-analysis",
+            model=model,
+            tokenizer=tokenizer
+        )
         
         try:
             print(f"📊 Extraction de {max_posts} posts maximum...")
@@ -315,7 +330,7 @@ class LinkedInScraper:
 
                     score_total = 0
                     for comment in post_comments:
-                        sentiment, score = self.pipeline_nlp(comment)
+                        sentiment, score = self.pipeline_nlp(comment, classifier)
                         comment_row = {
                             'date': post_date,
                             'comment': comment,
@@ -769,13 +784,16 @@ class LinkedInScraper:
         except:
             return 'neutre', 0.0
         
-    def analyse_sentiment_xlm_roberta(self, texte):
+    def analyse_sentiment_xlm_roberta(self, texte, classifier):
         """
         Utilise un modèle multilingue qui gère FR et EN sans détection
         Le plus simple et très performant
         """
-        classifier = pipeline("sentiment-analysis",
-                            model="cardiffnlp/twitter-xlm-roberta-base-sentiment")
+
+        print(f"Texte: {texte}")
+
+        # classifier = pipeline("sentiment-analysis",
+        #                     model="cardiffnlp/twitter-xlm-roberta-base-sentiment")
         
         resultat = classifier(texte)[0]
         
@@ -783,7 +801,7 @@ class LinkedInScraper:
         label_map = {'negative': -1, 'neutral': 0, 'positive': 1}
         polarite = label_map.get(resultat['label'].lower(), 0) * resultat['score']
         
-        print(f"Texte: {texte}")
+        
         print(f"Label: {resultat['label']}")
         print(f"Score: {resultat['score']:.3f}")
         print(f"Polarité: {polarite:.3f}\n")
@@ -827,12 +845,15 @@ class LinkedInScraper:
 
             return 'neutre', 0.0
     
-    def pipeline_nlp(self, text):
+    def pipeline_nlp(self, text, classifier):
         # pretaitement
         # text = self.nettoyer_texte(text)
 
         # Analyse de sentiment
-        polarite = self.analyse_sentiment_xlm_roberta(text)
+        polarite = self.analyse_sentiment_xlm_roberta(text, classifier)
+
+        print(f"Texte: {text}")
+        print(f"Polarité: {polarite:.3f}\n")
 
         # Classification de sentiment
         sentiment = self.classifier_sentiment(polarite)

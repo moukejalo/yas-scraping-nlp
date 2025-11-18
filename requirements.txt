@@ -12,6 +12,9 @@ beautifulsoup4
 transformers 
 torch
 langdetect
+tiktoken
+sentencepiece
+protobuf
 
 # # Requirements pour le scraper LinkedIn avec Selenium
 
