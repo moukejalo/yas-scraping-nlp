@@ -12,7 +12,7 @@ source nplenv/bin/activate
 # Run the scraper
 python linkedin_scraper_selenium.py
 
-Git operations
+# Git operations
 git add .
 git commit -m "adding created files"
 git push origin master
