@@ -246,12 +246,6 @@ with st.sidebar:
     st.image("yas-senegal.jpeg", use_container_width=True)
     st.markdown("---")
     
-    # st.subheader("⚙️ Configuration")
-    
-    # data_source = st.radio(
-    #     "Source de données:",
-    #     ["Données de démonstration", "Données scrapées"]
-    # )
     data_source = st.radio(
         "Source de données:",
         ["Données scrapées"]
@@ -273,37 +267,11 @@ with st.sidebar:
         else:
             st.error("Aucun fichier trouvé.")
 
-        # csv_files = glob.glob("linkedin_yas_posts_*.csv")
-        # if not csv_files:
-        #     st.error("Aucun fichier trouvé.")
-        # else:
-        #     # Extract the timestamp from each filename and sort
-        #     uploaded_file = max(csv_files, key=extract_timestamp_post)
-        #     df_post = pd.read_csv(uploaded_file)
-
-        # # get latest file
-        # csv_files = glob.glob("linkedin_yas_comments_*.csv")
-        # if not csv_files:
-        #     st.error("Aucun fichier trouvé.")
-        # else:
-        #     # Extract the timestamp from each filename and sort
-        #     uploaded_file2 = max(csv_files, key=extract_timestamp_post)
-        #     df_comments = pd.read_csv(uploaded_file2)
-
-        # click on button start the scraper
-        # if st.button("Scraper LinkedIn"):
-        #     st.write("Scrapping encours")
-        #     df_post, df_comments = main_scrapping()
-        #     st.write("Scrapping termine")
-    
-
 
 if df_post is not None:
 # if True:
     try:
         df = df_post
-        # st.write(df.head())
-        # st.write(df_comments.head())
     except Exception as e:
         st.error(f"❌ Erreur lors du chargement du fichier: {e}")
         st.stop()

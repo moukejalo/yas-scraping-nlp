@@ -34,10 +34,6 @@ warnings.filterwarnings("ignore")
 
 
 class LinkedInScraper:
-    """
-    Scraper LinkedIn pour extraire les posts d'une entreprise
-    """
-    
     def __init__(self, email, password, headless=False):
 
         if not email or not password:
@@ -55,70 +51,11 @@ class LinkedInScraper:
         chrome_options.add_argument("--disable-blink-features=AutomationControlled")
         chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
 
-        # chrome_options.add_argument("--headless=new")        # Required for server
-        # chrome_options.add_argument("--no-sandbox")          # Required for EC2
-        # chrome_options.add_argument("--disable-dev-shm-usage") # Fixes shared memory issue
-        # chrome_options.add_argument("--disable-gpu")
-        # chrome_options.add_argument("--disable-software-rasterizer")
-        # chrome_options.add_argument("--remote-debugging-port=9222")
-        # chrome_options.add_argument("--window-size=1920,1080")
-        # chrome_options.add_argument("--disable-extensions")
-
-        # # Add these to your Chrome options
-        # chrome_options.add_argument('--memory-pressure-off')
-        # chrome_options.add_argument('--max_old_space_size=4096')  # Increase memory limit
-
-        
-
         self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
-
-        # # This makes headless harder to detect
-        # self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {
-        #     "userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        # })
-        # self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-
-        # """
-        # Initialise le scraper
-        
-        # Args:
-        #     email: Email LinkedIn
-        #     password: Mot de passe LinkedIn
-        #     headless: Exécuter sans interface graphique
-        # """
-        # self.email = email
-        # self.password = password
-        
-        # # Configuration du navigateur Chrome
-        # chrome_options = Options()
-        
-        # # if headless:
-        # #     chrome_options.add_argument("--headless")
-        
-        # # # Options pour éviter la détection
-        # # chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-        # # chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-        # # chrome_options.add_experimental_option('useAutomationExtension', False)
-        # # chrome_options.add_argument("--disable-gpu")
-        # # chrome_options.add_argument("--no-sandbox")
-        # # chrome_options.add_argument("--disable-dev-shm-usage")
-        # # chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-        
-        # # self.driver = webdriver.Chrome(options=chrome_options)
-
-        # chrome_options = Options()
-        # chrome_options.add_argument("--start-maximized")
-        # chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-        # chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-
-        # driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
-
-        # self.wait = WebDriverWait(self.driver, 20)
         
         print("✅ Navigateur initialisé")
     
     def random_delay(self, min_seconds=2, max_seconds=5):
-        """Ajoute un délai aléatoire pour simuler un comportement humain"""
         time.sleep(random.uniform(min_seconds, max_seconds))
     
     def login(self):
@@ -132,91 +69,22 @@ class LinkedInScraper:
         pwd_input.send_keys(self.password)
         pwd_input.submit()
 
-        # # Vérifier si la connexion a réussi
-        # if "feed" in self.driver.current_url or "mynetwork" in self.driver.current_url:
-        #     print("✅ Connexion réussie!")
-        #     return True
-        # else:
-        #     print("⚠️ Connexion échouée - Vérifiez vos identifiants")
-        #     return False
-
         try:
             wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "nav")))
             return True
         except Exception:
-            # print("⚠️ Vérifie le navigateur : LinkedIn peut demander un code 2FA.")
-            # time.sleep(15)
             print("⚠️ Connexion échouée - Vérifiez vos identifiants")
             return False
 
-    def loginO(self):
-        """
-        Connexion à LinkedIn
-        """
-        try:
-            print("🔐 Connexion à LinkedIn...")
-            self.driver.get("https://www.linkedin.com/login")
-            self.random_delay(2, 4)
-            
-            # Saisie de l'email
-            email_input = self.wait.until(
-                EC.presence_of_element_located((By.ID, "username"))
-            )
-            email_input.send_keys(self.email)
-            self.random_delay(1, 2)
-            
-            # Saisie du mot de passe
-            password_input = self.driver.find_element(By.ID, "password")
-            password_input.send_keys(self.password)
-            self.random_delay(1, 2)
-            
-            # Clic sur le bouton de connexion
-            login_button = self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
-            login_button.click()
-            
-            print("⏳ Attente de la connexion...")
-            self.random_delay(5, 7)
-            
-            # Vérifier si la connexion a réussi
-            if "feed" in self.driver.current_url or "mynetwork" in self.driver.current_url:
-                print("✅ Connexion réussie!")
-                return True
-            else:
-                print("⚠️ Connexion échouée - Vérifiez vos identifiants")
-                return False
-                
-        except Exception as e:
-            print(f"❌ Erreur lors de la connexion: {e}")
-            return False
-    
     def navigate_to_company_page(self, company_name):
-        """
-        Navigue vers la page d'une entreprise
-        
-        Args:
-            company_name: Nom de l'entreprise (ex: "Yas Guinée")
-        """
         try:
             print(f"🔍 Recherche de l'entreprise: {company_name}")
             
-            # # Recherche de l'entreprise
-            # search_url = f"https://www.linkedin.com/search/results/companies/?keywords={company_name}"
-            # self.driver.get(search_url)
-            # self.random_delay(3, 5)
-            
-            # # Cliquer sur le premier résultat
-            # first_result = self.wait.until(
-            #     EC.presence_of_element_located((By.CSS_SELECTOR, ".entity-result__title-text a"))
-            # )
-            # company_url = first_result.get_attribute("href")
             company_url = f"https://www.linkedin.com/company/{company_name}"
             
-            
-            # Aller sur la page de l'entreprise
             self.driver.get(company_url)
             self.random_delay(3, 5)
             
-            # Aller sur l'onglet Posts
             posts_url = company_url.rstrip('/') + "/posts/"
             print(f"🔍 Navigation vers la page de l'entreprise post: {posts_url}")
             self.driver.get(posts_url)
@@ -230,12 +98,6 @@ class LinkedInScraper:
             return False
     
     def scroll_to_load_posts(self, num_scrolls=5):
-        """
-        Fait défiler la page pour charger plus de posts
-        
-        Args:
-            num_scrolls: Nombre de fois à défiler
-        """
         print(f"📜 Chargement des posts (scrolling {num_scrolls} fois)...")
         
         for i in range(num_scrolls):
@@ -249,20 +111,10 @@ class LinkedInScraper:
         self.random_delay(2, 3)
     
     def extract_posts(self, max_posts=30):
-        """
-        Extrait les posts de l'entreprise
-        
-        Args:
-            max_posts: Nombre maximum de posts à extraire
-            
-        Returns:
-            Liste de dictionnaires contenant les données des posts
-        """
         posts_data = []
         all_mcomments = []
         comments_data = []
 
-        # Forcer l'utilisation du tokenizer lent (évite l'erreur)
         model_name = "cardiffnlp/twitter-xlm-roberta-base-sentiment"
 
         tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
@@ -319,8 +171,6 @@ class LinkedInScraper:
                     except (NoSuchElementException, ValueError):
                         comments_count = 0
                     
-                    # Analyser le sentiment
-                    # sentiment, score = self.analyze_sentiment(post_text)
                     topic = self.classify_topic(post_text)
 
                     # Extraire les commentaires du post
@@ -378,162 +228,6 @@ class LinkedInScraper:
         except Exception as e:
             print(f"❌ Erreur lors de l'extraction: {e}")
             return posts_data, comments_data
-    
-    def extract_comments_from_post1(self, post_element, driver):
-        """Cliquer sur le bouton commentaire et récupérer les commentaires"""
-        comments = []
-        
-        try:
-            # Trouver le bouton de commentaires
-            comment_button_selectors = [
-                "button[aria-label*='comment']",
-                "//button[contains(., 'comment')]",
-                ".social-details-social-counts__comments-button"
-            ]
-            
-            comment_button = None
-            for selector in comment_button_selectors:
-                try:
-                    if selector.startswith("//"):
-                        comment_button = post_element.find_element(By.XPATH, selector)
-                    else:
-                        comment_button = post_element.find_element(By.CSS_SELECTOR, selector)
-                    
-                    if comment_button.is_displayed():
-                        print(f"✅ Bouton trouvé avec: {selector}")
-                        break
-                    else:
-                        comment_button = None
-                except Exception:
-                    continue
-            
-            if comment_button:
-                # Scroll et clic
-                driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", comment_button)
-                time.sleep(2)
-                
-                button_text = comment_button.text.strip()
-                print(f"📝 Bouton texte: '{button_text}'")
-                
-                # Clic JavaScript
-                driver.execute_script("arguments[0].click();", comment_button)
-                print("🖱️ Clic JavaScript réussi")
-                
-                # Attendre que la modale des commentaires s'ouvre
-                print("🔄 Attente du chargement des commentaires...")
-                time.sleep(5)
-                
-                # MAIN CORRECTION: Attendre spécifiquement la modale des commentaires
-                wait = WebDriverWait(driver, 10)
-                
-                # Essayer de trouver la modale des commentaires
-                modal_selectors = [
-                    ".comments-overlay",
-                    ".scaffold-finite-scroll__content", 
-                    ".comments-comments-list__container",
-                    ".artdeco-modal__content"
-                ]
-                
-                modal_element = None
-                for selector in modal_selectors:
-                    try:
-                        modal_element = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, selector)))
-                        print(f"✅ Modale trouvée avec: {selector}")
-                        break
-                    except:
-                        continue
-                
-                if modal_element:
-                    # Scroll dans la modale pour charger tous les commentaires
-                    print("📜 Défilement dans la modale...")
-                    for i in range(3):
-                        driver.execute_script("arguments[0].scrollTop = arguments[0].scrollHeight", modal_element)
-                        time.sleep(2)
-                    
-                    # Attendre un peu plus pour le chargement
-                    time.sleep(3)
-                    
-                    # MAIN FIX: Rechercher les commentaires dans toute la page une fois la modale ouverte
-                    comment_selectors = [
-                        "span.coments-comment-item_main-content",  # Votre sélecteur exact
-                        ".comments-comment-item",
-                        ".feed-shared-comment__content",
-                        ".comment__content",
-                        "[data-test-id='comment']",
-                        ".update-components-text"  # Le contenu texte des commentaires
-                    ]
-                    
-                    all_comments_found = []
-                    for selector in comment_selectors:
-                        try:
-                            comment_elements = driver.find_elements(By.CSS_SELECTOR, selector)
-                            if comment_elements:
-                                print(f"✅ {len(comment_elements)} éléments trouvés avec: {selector}")
-                                
-                                for comment_element in comment_elements:
-                                    try:
-                                        text = comment_element.text.strip()
-                                        if text and len(text) < 100:  # Filtrer les textes courts
-                                            # Éviter les doublons
-                                            if text not in all_comments_found:
-                                                all_comments_found.append(text)
-                                                print(f"💬 Commentaire: {text[:80]}...")
-                                    except Exception as e:
-                                        continue
-                        except Exception:
-                            continue
-                    
-                    comments = all_comments_found
-                    
-                    # Alternative avec BeautifulSoup sur le HTML de la modale
-                    # if not comments:
-                    #     print("🔄 Essai avec BeautifulSoup sur le HTML complet...")
-                    #     soup = BeautifulSoup(driver.page_source, "html.parser")
-                        
-                    #     # Essayer plusieurs sélecteurs
-                    #     comment_texts = []
-                        
-                    #     # Sélecteur exact de votre HTML
-                    #     comment_spans = soup.find_all("span", class_="coments-comment-item_main-content")
-                    #     for span in comment_spans:
-                    #         text = span.get_text(separator=" ", strip=True)
-                    #         if text and len(text) > 10:
-                    #             comment_texts.append(text)
-                        
-                    #     # Autres sélecteurs possibles
-                    #     if not comment_texts:
-                    #         comment_divs = soup.find_all("div", class_="update-components-text")
-                    #         for div in comment_divs:
-                    #             text = div.get_text(separator=" ", strip=True)
-                    #             if text and len(text) > 10:
-                    #                 comment_texts.append(text)
-                        
-                    #     # Filtrer les doublons
-                    #     comments = list(dict.fromkeys(comment_texts))
-                        
-                    #     for comment in comments:
-                    #         print(f"💬 Commentaire BS: {comment[:80]}...")
-                
-                else:
-                    print("❌ Modale des commentaires non trouvée")
-                    
-                # Fermer la modale
-                self.close_modal(driver)
-                
-            else:
-                print("❌ Aucun bouton de commentaires trouvé dans ce post")
-                
-        except Exception as e:
-            print(f"❌ Erreur générale: {e}")
-            import traceback
-            traceback.print_exc()
-            # Essayer de fermer la modale en cas d'erreur
-            try:
-                self.close_modal(driver)
-            except:
-                pass
-        
-        return comments
     
     def extract_comments_from_post(self, post_element):
         comments_data = []
@@ -742,15 +436,7 @@ class LinkedInScraper:
             print(f"⚠️ Erreur lors de la fermeture: {e}")
 
     def parse_linkedin_date(self, date_text):
-        """
-        Parse le texte de date LinkedIn (ex: "il y a 2 jours")
         
-        Args:
-            date_text: Texte de la date LinkedIn
-            
-        Returns:
-            Date au format YYYY-MM-DD
-        """
         from datetime import timedelta
         
         date_text = date_text.lower()
@@ -775,15 +461,6 @@ class LinkedInScraper:
         else:
             return today.strftime('%Y-%m-%d')
     
-    def analyze_sentiment1(self, text):
-        try:
-            blob = TextBlob(text)
-            polarity = blob.sentiment.polarity
-            return polarity
-
-        except:
-            return 'neutre', 0.0
-        
     def analyse_sentiment_xlm_roberta(self, texte, classifier):
         """
         Utilise un modèle multilingue qui gère FR et EN sans détection
@@ -791,9 +468,6 @@ class LinkedInScraper:
         """
 
         print(f"Texte: {texte}")
-
-        # classifier = pipeline("sentiment-analysis",
-        #                     model="cardiffnlp/twitter-xlm-roberta-base-sentiment")
         
         resultat = classifier(texte)[0]
         
@@ -807,44 +481,6 @@ class LinkedInScraper:
         print(f"Polarité: {polarite:.3f}\n")
         return polarite
         
-    def analyze_sentiment(self, text):
-        print(f"Texte: {text}")
-
-        # Créer un blob pour détecter la langue 
-        blob = TextBlob(text)
-        print(f"Texte bolb done: {text}")
-
-    
-        try:
-            # Détecter la langue
-            # langue = blob.detect_language()
-            langue = detect(text)
-            print(f"Langue détectée: {langue}")
-
-            if langue == 'fr':
-                # Analyse en français
-                blob_fr = TextBlob(text, pos_tagger=PatternTagger(), analyzer=PatternAnalyzer())
-                sentiment = blob_fr.sentiment
-                print(f"Texte (FR): {text}")
-                print(f"Polarité: {sentiment[0]:.2f} (négatif < 0 < positif)")
-                return sentiment[0]
-            
-            elif langue == 'en':
-                blob = TextBlob(text)
-                polarity = blob.sentiment.polarity
-                return polarity
-            
-            else:
-                texte_traduit = str(blob.translate(to='en'))
-                blob_en = TextBlob(texte_traduit)
-                sentiment = blob_en.sentiment
-                return sentiment.polarity
-
-        except:
-            print("exception is sentimnt")
-
-            return 'neutre', 0.0
-    
     def pipeline_nlp(self, text, classifier):
         # pretaitement
         # text = self.nettoyer_texte(text)
@@ -888,15 +524,6 @@ class LinkedInScraper:
     
 
     def classify_topic(self, text):
-        """
-        Classifie le sujet d'un post
-        
-        Args:
-            text: Texte du post
-            
-        Returns:
-            Catégorie du sujet
-        """
         text_lower = text.lower()
         
         keywords = {
@@ -916,14 +543,6 @@ class LinkedInScraper:
         return 'Autre'
     
     def save_to_csv(self, posts_data, filename=None):
-        """
-        Sauvegarde les données dans un fichier CSV
-        
-        Args:
-            posts_data: Liste des posts
-            filename: Nom du fichier (optionnel)
-        """
-
         # Define the save directory
         save_dir = "prod-data"
         os.makedirs(save_dir, exist_ok=True)  # ensures folder exists, even if deleted later
