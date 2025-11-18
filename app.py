@@ -291,10 +291,10 @@ with st.sidebar:
         #     df_comments = pd.read_csv(uploaded_file2)
 
         # click on button start the scraper
-        if st.button("Scraper LinkedIn"):
-            st.write("Scrapping encours")
-            df_post, df_comments = main_scrapping()
-            st.write("Scrapping termine")
+        # if st.button("Scraper LinkedIn"):
+        #     st.write("Scrapping encours")
+        #     df_post, df_comments = main_scrapping()
+        #     st.write("Scrapping termine")
     
 
 
