@@ -15,24 +15,3 @@ langdetect
 tiktoken
 sentencepiece
 protobuf
-
-# # Requirements pour le scraper LinkedIn avec Selenium
-
-# # Selenium et WebDriver
-# selenium==4.15.2
-# webdriver-manager==4.0.1
-
-# # Analyse de données
-# pandas>=2.2.2
-# numpy>=2.0.0
-
-# # Analyse de sentiments
-# textblob==0.17.1
-
-# # Interface Streamlit (optionnel pour visualisation)
-# streamlit>=1.38.0
-# plotly==5.17.0
-# openpyxl==3.1.2
-
-# # Utilitaires
-# python-dotenv==1.0.0
