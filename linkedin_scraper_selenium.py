@@ -946,42 +946,28 @@ class LinkedInScraper:
         print("🔒 Navigateur fermé")
 
 
-# Helper to read config values flexibly
+
 def get_secret(key, default=None):
     if key in os.environ:
         return os.environ[key]
     elif key in st.secrets:
         return st.secrets[key]
     else:
-        return default        
-    # # 1. Check Streamlit secrets (deployment)
-    # if key in st.secrets:
-    #     return st.secrets[key]
-    # # 2. Fallback to OS environment variables (local dev)
-    # elif key in os.environ:
-    #     return os.environ[key]
-    # # 3. Optional default
-    # return default
+        return default   
 
 def main():
 
-    # Try to import dotenv for local environment (safe even if not installed in cloud)
     try:
         from dotenv import load_dotenv
-        load_dotenv()  # loads .env if it exists
+        load_dotenv()  
     except ImportError:
         pass
 
-    """
-    # Fonction principale
-    # """
-    # Usage
     email = get_secret("LINKEDIN_EMAIL")
     password = get_secret("LINKEDIN_PASSWORD")
     company_name = get_secret("COMPANY_NAME")
     max_posts = int(get_secret("MAX_POSTS", 30))
     
-    # max_posts = 5
     headless = False
     
     print(email)
